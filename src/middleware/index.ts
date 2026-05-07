@@ -2,7 +2,7 @@ import express, { Express } from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import session from 'express-session'
-import config from 'config'
+import appConfig from '@/config/app.config'
 import path from 'path'
 
 function initMiddleware(app: Express) {
@@ -19,7 +19,7 @@ function initMiddleware(app: Express) {
   // session 配置
   app.use(
     session({
-      secret: config.get<string>('session_secret'),
+      secret: appConfig.jwt.secret,
       resave: true,
       saveUninitialized: true,
     }),

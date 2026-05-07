@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken'
-import config from 'config'
-import md5 from 'md5'
+import appConfig from '@/config/app.config'
 import { NextFunction, Request, Response } from 'express'
-import commonRes from '../../utils/commonRes'
+import commonRes from '@/utils/commonRes'
 
 export interface CustomRequest<T> extends Request {
   userInfo?: T
@@ -23,7 +22,7 @@ export const generateToken = (payload: any, loginInfo = 1) => {
 
   return (
     'Bearer ' +
-    jwt.sign(payload, md5(config.get<string>('secret_key')), {
+    jwt.sign(payload, appConfig.jwt.secret, {
       algorithm: 'HS512',
       expiresIn: 60 * 60 * 24 * loginInfo,
     })
@@ -38,9 +37,9 @@ export const verifyToken = (required = true) => {
     // 判断是否有token
     if (token) {
       // 对 token 信息进行校验  需要拿到的token以及密钥 以及加密的方式
-      jwt.verify(token, md5(config.get<string>('secret_key')), { algorithms: ['HS512'] }, (err, info) => {
+      jwt.verify(token, appConfig.jwt.secret, { algorithms: ['HS512'] }, (err, info) => {
         if (err) {
-          return commonRes.error(res, null, 'token失效或已过期！', 402)
+          return commonRes.error(res, null, 'token失效或已过期！', 401)
         } else {
           console.log('校验通过')
           req.userInfo = info
@@ -48,7 +47,7 @@ export const verifyToken = (required = true) => {
         }
       })
     } else if (required) {
-      return commonRes.error(res, null, 'token失效或已过期！', 402)
+      return commonRes.error(res, null, 'token失效或已过期！', 401)
     } else {
       next()
     }

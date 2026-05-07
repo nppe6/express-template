@@ -1,5 +1,5 @@
 import express from 'express'
-import config from 'config'
+import appConfig from '@/config/app.config'
 import { routerConf } from './module'
 
 export interface RouterConf {
@@ -8,7 +8,7 @@ export interface RouterConf {
   meta: Record<string, any>
 }
 
-const API_PREFIX = config.get<string>('api_url')
+const API_PREFIX = appConfig.apiPrefix
 
 function routes(app: express.Express) {
   app.get(`${API_PREFIX}/`, (_req: express.Request, res: express.Response) => {
