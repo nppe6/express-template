@@ -11,8 +11,19 @@ export interface RouterConf {
 const API_PREFIX = config.get<string>('api_url')
 
 function routes(app: express.Express) {
-  app.get('/', (req: express.Request, res: express.Response) => {
-    res.status(200).send('Hello MR.Xiao ~')
+  app.get(`${API_PREFIX}/`, (_req: express.Request, res: express.Response) => {
+    res.status(200).send({
+      message: 'Welcome to Express2.0 API',
+      prefix: API_PREFIX,
+    })
+  })
+
+  /** 探针、网关、容器健康检查 */
+  app.get('/health', (_req: express.Request, res: express.Response) => {
+    res.status(200).send({
+      status: 'ok',
+      service: 'express-template',
+    })
   })
 
   routerConf.forEach((route) => {

@@ -1,9 +1,26 @@
-## Express + Ts 搭建后端接口服务模板
+## Express + TypeScript API Starter
 
-### 安装相关依赖 以及 启动服务命令
+### Install
 
-```
+```bash
 pnpm install
+```
 
+### Development
+
+```bash
 pnpm dev
 ```
+
+### Checks
+
+```bash
+pnpm typecheck
+pnpm build
+pnpm prisma:validate
+```
+
+### Health Endpoints
+
+- `GET /health`
+- `GET /api/health`
