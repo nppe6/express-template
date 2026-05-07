@@ -39,7 +39,7 @@ The goal of this plan is not to turn the repo into a large framework. It is to t
 - The TypeScript compiler target is still `es5`, which is out of date for Node 22.
 - Routes are registered after `app.listen`, which makes startup flow harder to reason about.
 - App config is split between `.env` and `config/default.ts`, with secrets still hardcoded in config.
-- Session middleware and JWT middleware are both present, but there is no coherent auth story.
+- JWT middleware is the primary API auth path. `express-session` is intentionally kept for the graphic captcha flow, so it should be treated as captcha infrastructure rather than a competing login/session auth model.
 - The current user route is not REST-shaped: `GET /users` validates login credentials from the request body.
 - Error handling is still based on local wrapper style instead of centralized middleware.
 - Several installed packages are not connected to real request flows.
@@ -137,6 +137,23 @@ Once the runtime/tooling base is stable, this phase removes the highest-impact s
 - Add a typed env/config loader with startup-time validation.
 - Keep non-sensitive defaults only where they genuinely help local development.
 
+   Proposed env validation design:
+   - Validate configuration when `src/config/app.config.ts` is imported, so invalid runtime configuration fails before the HTTP server starts.
+   - Required variables:
+     - `DATABASE_URL`: required; must be a non-empty connection string.
+     - `JWT_SECRET`: required; must be a non-empty secret and should not silently fall back to a hardcoded production secret.
+   - Optional variables with safe defaults:
+     - `PORT`: optional; defaults to `3000`; when provided, it must parse to a valid TCP port.
+     - `API_PREFIX`: optional; defaults to `/api`; when provided, it should start with `/`.
+     - JWT token lifetime should stay in the JWT module for now because the existing remember-me flow uses a runtime parameter: default `1` day, or `7` days when remember-me is selected.
+   - Fail-fast behavior:
+     - Missing or malformed required config should throw a clear startup error that names the invalid variable.
+     - The app should not continue with placeholder secrets such as `express-template` when `JWT_SECRET` is missing.
+   - Implementation direction:
+     - Keep the first pass small and local to `app.config.ts`.
+     - Prefer a typed parser such as `zod` if it is introduced for Phase 2/3 validation, otherwise implement a small explicit parser without adding a new dependency only for env validation.
+     - Keep `.env.example` in sync with every supported environment variable and document which variables are required.
+
 2. Standardize logging and request context
 - Keep `pino`, but clean up logger integration.
 - Add request-aware logging, ideally through middleware rather than scattered `console.log`.
@@ -153,8 +170,9 @@ Once the runtime/tooling base is stable, this phase removes the highest-impact s
 - Fix clearly incorrect status usage such as JWT expiry returning `402`.
 
 5. Choose a primary auth path
-- Prefer JWT-only for this repo's current API-first shape.
-- Remove `express-session` unless there is a clear near-term need for it.
+- Prefer JWT for API authentication in this repo's current API-first shape.
+- Keep `express-session` for the graphic captcha flow, and avoid expanding it into a general login/session auth model unless the product scope changes.
+- Keep `svg-captcha` if the captcha route is retained or implemented in the near term.
 - Stop hashing the JWT secret with `md5`.
 - Define an explicit token payload type.
 
@@ -162,6 +180,8 @@ Once the runtime/tooling base is stable, this phase removes the highest-impact s
 
 - App starts with validated config
 - Missing required env vars fail fast with a useful startup error
+- `JWT_SECRET` has no silent hardcoded fallback in the finalized config loader
+- `.env.example` documents all required and optional config variables
 - Auth failures return consistent statuses and response shape
 - Unhandled exceptions route through one global error path
 - No `console.log` remains in request/auth flow
@@ -223,7 +243,7 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
   - `mongoose`
   - `@types/mongoose`
   - `multer`
-  - `svg-captcha`
+  - `svg-captcha` only if the graphic captcha flow is removed or deferred
   - `mockjs`
   - `lodash` if still unused
   - `md5` if auth cleanup removes it
@@ -269,7 +289,7 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
 
 - Keep Prisma on `6.19.x` for now because it is already working and remains the safer line if MongoDB is still a future possibility.
 - Prefer Express 5 now instead of stabilizing on Express 4, because the repo is small and current official/community starter direction has already moved.
-- Prefer JWT-only over mixed JWT + session for this repository's current API shape.
+- Prefer JWT for API authentication while keeping `express-session` scoped to the graphic captcha flow.
 - Keep the project intentionally small; modernization should not turn it into a heavyweight framework.
 
 ---
