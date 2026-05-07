@@ -8,6 +8,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().trim().min(1, 'JWT_SECRET is required'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   API_PREFIX: z.string().trim().startsWith('/').default('/api'),
+  // 当前仅用于图形验证码 session。
   SESSION_SECRET: z.string().trim().min(1, 'SESSION_SECRET is required'),
   // JWT_EXPIRES_IN: z.string().trim().default('1d'),
 })

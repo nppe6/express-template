@@ -10,6 +10,7 @@ const appConfig = {
     secret: envConfig.JWT_SECRET,
     // expiresIn: envConfig.JWT_EXPIRES_IN,
   },
+  // 图形验证码 session 使用独立密钥，不和 JWT 共用。
   session: {
     secret: envConfig.SESSION_SECRET,
   },
