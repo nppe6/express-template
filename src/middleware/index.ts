@@ -19,7 +19,7 @@ function initMiddleware(app: Express) {
   // session 配置
   app.use(
     session({
-      secret: appConfig.jwt.secret,
+      secret: appConfig.session.secret,
       resave: true,
       saveUninitialized: true,
     }),

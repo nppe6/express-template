@@ -10,6 +10,9 @@ const appConfig = {
     secret: envConfig.JWT_SECRET,
     // expiresIn: envConfig.JWT_EXPIRES_IN,
   },
+  session: {
+    secret: envConfig.SESSION_SECRET,
+  },
 }
 
 export default appConfig
