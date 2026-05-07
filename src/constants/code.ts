@@ -6,9 +6,9 @@ enum Code {
 }
 
 enum CodeMessage {
-  success = '请求成功',
-  denied = '无权限',
-  error = '请求失败',
+  success = 'Request succeeded',
+  denied = 'Unauthorized',
+  error = 'Request failed',
 }
 
 // 定义字面量类型 遍历Code 得出
