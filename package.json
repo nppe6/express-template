@@ -7,13 +7,20 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts"
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:format": "prisma format",
+    "prisma:migrate:status": "prisma migrate status",
+    "prisma:db:push": "prisma db push",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.2.1",
+    "@prisma/client": "^6.19.3",
     "argon2": "^0.41.1",
     "config": "^3.3.12",
     "cors": "^2.8.5",
@@ -49,7 +56,7 @@
     "@types/node": "^22.10.10",
     "@types/pino": "^7.0.5",
     "prettier": "^3.4.2",
-    "prisma": "^6.2.1",
+    "prisma": "^6.19.3",
     "typescript": "^5.7.3"
   }
 }
