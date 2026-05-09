@@ -5,7 +5,7 @@ import { verifyToken } from '../middleware/jwt'
 import validate from '../middleware/validator/validate'
 import { userValidator } from '../validations/user.validator'
 // controller 控制层
-import userController from '../controller/userController'
+import userController from '../controller/user.controller'
 const userRouter = express.Router()
 
 userRouter.get('/', verifyToken(false), validate(userValidator, 'body'), userController.test)
