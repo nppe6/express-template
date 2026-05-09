@@ -1,7 +1,7 @@
 import express from 'express'
-import silentHandle from '../utils/silentHandle'
-import commonRes from '../utils/commonRes'
-import userService from '../service/userService'
+import silentHandle from '@/utils/silentHandle'
+import commonRes from '@/utils/commonRes'
+import userService from '@/service/userService'
 
 const test = async (req: express.Request, res: express.Response) => {
   const [e, user] = await silentHandle(userService.test, req.body)

@@ -41,7 +41,6 @@ export const verifyToken = (required = true) => {
         if (err) {
           return commonRes.error(res, null, 'token失效或已过期！', 401)
         } else {
-          console.log('校验通过')
           req.userInfo = info
           next()
         }
