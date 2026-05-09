@@ -1,13 +1,15 @@
-import jwt from 'jsonwebtoken'
-import appConfig from '@/config/app.config'
+import jwt, { JwtPayload } from 'jsonwebtoken'
 import { NextFunction, Request, Response } from 'express'
-import commonRes from '@/utils/commonRes'
+import appConfig from '@/config/app.config'
+import AppError from '@/errors/AppError'
 
 export interface CustomRequest<T> extends Request {
+  // token 校验通过后挂载的用户信息。
   userInfo?: T
 }
 
-export interface UserInfoInterface {
+// JWT 载荷中的用户信息结构。
+export interface UserInfoInterface extends JwtPayload {
   id: number
   name: string
   loginID: string
@@ -16,10 +18,20 @@ export interface UserInfoInterface {
   exp: number
 }
 
-export const generateToken = (payload: any, loginInfo = 1) => {
-  // Bearer 是约定熟成 的一个前缀
-  // payload 是传入函数内容 一般为用户的一些信息  密钥  加密方式 以及 token时效性
+// token 缺失、格式错误或过期时统一抛出的业务错误。
+const invalidTokenError = () =>
+  new AppError({
+    status: 401,
+    message: 'token失效或已过期！',
+  })
 
+/**
+ * 生成 Token
+ * @param {Object} payload - 载荷（通常包含用户 ID / 用户名）
+ * @param {number} loginInfo - 登录有效期（单位：天）
+ * @returns {string} Bearer token
+ */
+export const generateToken = (payload: string | Buffer | object, loginInfo = 1) => {
   return (
     'Bearer ' +
     jwt.sign(payload, appConfig.jwt.secret, {
@@ -29,26 +41,30 @@ export const generateToken = (payload: any, loginInfo = 1) => {
   )
 }
 
+/**
+ * 验证 Token 的中间件
+ * @param {boolean} required - 是否必须传 token（默认必须）
+ * @returns {Function} 放行
+ */
 export const verifyToken = (required = true) => {
-  return (req: CustomRequest<any>, res: Response, next: NextFunction) => {
-    // 拿到token 信息
-    let token: any = req.headers.authorization
-    token = token ? token.split(' ')[1] : null
-    // 判断是否有token
+  return (req: CustomRequest<JwtPayload | string>, _res: Response, next: NextFunction) => {
+    let token = req.headers.authorization
+    token = token ? token.split(' ')[1] : undefined
+
     if (token) {
-      // 对 token 信息进行校验  需要拿到的token以及密钥 以及加密的方式
-      jwt.verify(token, appConfig.jwt.secret, { algorithms: ['HS512'] }, (err, info) => {
-        if (err) {
-          return commonRes.error(res, null, 'token失效或已过期！', 401)
-        } else {
-          req.userInfo = info
-          next()
-        }
-      })
-    } else if (required) {
-      return commonRes.error(res, null, 'token失效或已过期！', 401)
-    } else {
-      next()
+      try {
+        req.userInfo = jwt.verify(token, appConfig.jwt.secret, { algorithms: ['HS512'] })
+      } catch {
+        throw invalidTokenError()
+      }
+
+      return next()
     }
+
+    if (required) {
+      throw invalidTokenError()
+    }
+
+    return next()
   }
 }

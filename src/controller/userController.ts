@@ -1,12 +1,11 @@
 import express from 'express'
-import silentHandle from '@/utils/silentHandle'
 import commonRes from '@/utils/commonRes'
 import userService from '@/service/userService'
 
-const test = async (req: express.Request, res: express.Response) => {
-  const [e, user] = await silentHandle(userService.test, req.body)
+const test = async (_req: express.Request, res: express.Response) => {
+  const user = await userService.test()
 
-  return e ? commonRes.error(res, null, e.message) : commonRes(res, user)
+  commonRes(res, user)
 }
 
 export default {
