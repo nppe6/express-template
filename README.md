@@ -1,147 +1,124 @@
-# Express + TypeScript API Starter
+<p align="center">
+  <img src="docs/assets/express-server.png" alt="Express Server" width="360" />
+</p>
 
-一个轻量的 Express 5 + TypeScript + Prisma API 模板，使用 JWT 作为主要 API 鉴权方式，使用 Joi 做请求参数校验。
+<h1 align="center">Express Server</h1>
 
-## 技术栈
+<p align="center">
+  现代化的 Express 5 + TypeScript API 脚手架，内置 Prisma、JWT、Joi 校验、统一错误处理和现代化响应结构。
+</p>
 
-- Express 5
-- TypeScript
-- Prisma 6
-- Joi
-- JWT
-- Pino
-- Zod 环境变量校验
+<p align="center">
+  <a href="#我们的优势">我们的优势</a>
+  ·
+  <a href="#快速开始">快速开始</a>
+  ·
+  <a href="#目录约定">目录约定</a>
+  ·
+  <a href="#常见问题">常见问题</a>
+</p>
 
-脚手架预置能力：
+<p align="center">
+  <img src="https://img.shields.io/badge/node-18%2B-339933" alt="node 18+" />
+  <img src="https://img.shields.io/badge/express-5-000000" alt="express 5" />
+  <img src="https://img.shields.io/badge/typescript-ready-3178c6" alt="typescript ready" />
+  <img src="https://img.shields.io/badge/prisma-6-2d3748" alt="prisma 6" />
+</p>
 
-- `multer`：文件上传
-- `svg-captcha`：图形验证码
-- `md5`：兼容简单摘要场景
-- `lodash-es`：轻量工具函数
+---
 
-## 安装
+## 我们的优势
+
+| 能力 | 说明 |
+| --- | --- |
+| 现代运行时 | Express 5 + TypeScript，适合继续扩展真实 API 项目 |
+| 数据访问 | Prisma 6 + MySQL，配置迁移到 `prisma.config.ts` |
+| 请求校验 | Joi schema 独立放在 `validations`，路由中显式组合 |
+| 错误处理 | `AppError` + 404 + 全局错误中间件，保留 Express 标准机制 |
+| 响应格式 | 统一 `{ message, data, type, error }`，贴近 Koa 模板体验 |
+| 脚手架预置 | 预留 `multer`、`svg-captcha`、`md5`、`lodash-es` |
+
+## 快速开始
+
+1. 安装依赖。
 
 ```bash
 pnpm install
 ```
 
-## 环境变量
+2. 创建本地环境变量文件，并按需修改数据库、JWT、Session 配置。
 
-复制 `.env.example` 为 `.env`，并按本地环境修改。
-
-```env
-DATABASE_URL="mysql://root:password@localhost:3306/express_template"
-JWT_SECRET="change-me"
-SESSION_SECRET="change-me"
-PORT=3000
-API_PREFIX="/api"
-NODE_ENV="development"
+```bash
+cp .env.example .env
 ```
 
-必填变量：
+3. 生成 Prisma Client，让代码可以类型安全地访问数据库。
 
-- `DATABASE_URL`
-- `JWT_SECRET`
-- `SESSION_SECRET`
+```bash
+pnpm prisma:generate
+```
 
-可选变量：
+4. 将 Prisma schema 同步到本地数据库。
 
-- `PORT`，默认 `3000`
-- `API_PREFIX`，默认 `/api`
-- `NODE_ENV`，默认 `development`
+```bash
+pnpm prisma:db:push
+```
 
-环境变量会在服务启动前校验，缺失或格式错误会直接启动失败。
-
-## 开发
+5. 启动开发服务。
 
 ```bash
 pnpm dev
 ```
 
-## 构建与运行
-
-```bash
-pnpm build
-pnpm start
-```
-
-## 检查
+常用命令：
 
 ```bash
 pnpm typecheck
+pnpm build
 pnpm test
 pnpm lint
 pnpm prisma:validate
-```
-
-## Prisma
-
-Prisma 配置位于 `prisma.config.ts`。
-
-```bash
-pnpm prisma:generate
-pnpm prisma:db:push
-pnpm prisma:migrate:status
-```
-
-Seed：
-
-```bash
 pnpm exec prisma db seed
 ```
 
-## 路由
+默认接口：
 
-- `GET /health`：健康检查
-- `GET /api/`：欢迎页，返回 HTML
-- `GET /api/users`：用户示例接口
+- `GET /health`
+- `GET /api/`
+- `GET /api/users`
 
-## 响应格式
-
-接口响应使用轻量的 Koa 模板风格：
-
-```json
-{
-  "message": "请求成功",
-  "data": null,
-  "type": "success",
-  "error": null
-}
-```
-
-错误响应示例：
-
-```json
-{
-  "message": "参数校验失败",
-  "data": null,
-  "type": "error",
-  "error": ["账号不能为空"]
-}
-```
-
-## 目录结构
+## 目录约定
 
 ```text
 src/
-  app.ts
-  config/
-  controller/
-  dao/
-  errors/
-  middleware/
-  model/
-  router/
-  service/
-  utils/
-  validations/
+  config/       # 环境变量与应用配置
+  controller/   # 请求/响应编排
+  dao/          # Prisma 数据访问
+  errors/       # 应用错误类型
+  middleware/   # 通用中间件
+  model/        # Prisma Client
+  router/       # 路由挂载和中间件组合
+  service/      # 业务逻辑
+  utils/        # 工具函数
+  validations/  # Joi schema
 ```
 
-分层约定：
+## 常见问题
 
-- `router`：路由挂载和中间件组合
-- `validations`：Joi schema
-- `middleware`：通用中间件
-- `controller`：请求/响应编排
-- `service`：业务逻辑
-- `dao`：数据库访问
+<details>
+<summary>如何配置环境变量？</summary>
+
+复制 `.env.example` 为 `.env`，至少填写 `DATABASE_URL`、`JWT_SECRET`、`SESSION_SECRET`。环境变量会在启动时通过 Zod 校验。
+</details>
+
+<details>
+<summary>如何执行种子文件？</summary>
+
+执行 `pnpm exec prisma db seed`。Prisma 会读取 `prisma.config.ts`，并运行 `tsx prisma/seed.ts`。
+</details>
+
+<details>
+<summary>为什么保留 multer、svg-captcha、md5、lodash-es？</summary>
+
+这是脚手架项目的预置能力：上传、验证码、简单摘要兼容和轻量工具函数。当前不强制使用，后续业务需要时可直接接入。
+</details>
