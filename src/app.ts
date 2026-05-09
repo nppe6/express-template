@@ -3,6 +3,7 @@ import routes from './router'
 import logger from './utils/logger'
 import initMiddleware from './middleware'
 import appConfig from './config/app.config'
+import { errorHandler, notFoundHandler } from './middleware/error'
 
 const app = express()
 
@@ -10,6 +11,8 @@ const app = express()
 initMiddleware(app)
 // 添加路由
 routes(app)
+app.use(notFoundHandler)
+app.use(errorHandler)
 
 const server = app.listen(appConfig.port, () => {
   logger.info(`App is running at http://127.0.0.1:${appConfig.port}`)

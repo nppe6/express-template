@@ -1,53 +1,53 @@
-// utils/commonRes.ts
-
 import { Response } from 'express'
-import { Code, codeType, CodeMessage } from '../constants/code'
-import logger from './logger'
 
-interface ResOption {
-  type?: codeType
+type ResponseType = 'success' | 'error'
+
+interface SendResponseOption {
+  // HTTP 状态码，只负责表达请求在传输层的结果。
   status?: number
+  // 额外说明，给前端展示或调试使用。
+  message: unknown
+  // 返回给前端的数据，错误时通常为 null。
+  data?: unknown
+  // 表示成功与否，参考 Koa 模板中的 success / error。
+  type?: ResponseType
+  // 错误说明或错误详情，例如参数校验错误列表。
+  error?: unknown
+}
+
+interface CommonResOption {
+  // HTTP 状态码，默认 200。
+  status?: number
+  // 额外说明，默认“请求成功”。
   message?: unknown
 }
 
-// 默认成功响应
-function commonRes(res: Response, data: unknown, options?: ResOption) {
-  options = Object.assign({ type: Code[3000] }, options || {}) // 默认success
+interface CommonRes {
+  (res: Response, data?: unknown, options?: CommonResOption): void
+}
 
-  const { type, status, message } = options
-  let resStatus = status
+// 统一响应出口，只负责组装固定 JSON 结构并发送响应。
+function sendResponse(res: Response, options: SendResponseOption) {
+  const { status = 200, message, data = null, type = 'success', error = null } = options
 
-  if (resStatus === undefined) {
-    // 根据状态设置状态码
-    resStatus = type === Code[3000] ? 200 : 409
-  }
-  // 响应参数
-  const sendRes: { code: number; data: unknown; message?: unknown } = {
-    code: Code[type as codeType],
+  res.status(status).send({
+    message,
     data,
-  }
-  // 响应描述
-  message && (sendRes.message = message)
-  res.status(resStatus).send(sendRes)
-}
-
-// 错误响应
-commonRes.error = function (res: Response, data: unknown, message?: unknown, status?: number) {
-  logger.error(message || CodeMessage['error'])
-  this(res, data, {
-    type: 'error',
-    message: message || CodeMessage['error'],
-    status: status || 409,
+    type,
+    error,
   })
 }
 
-// 无权限响应
-commonRes.denied = function (res: Response, data: unknown) {
-  this(res, data, {
-    type: 'denied',
-    message: CodeMessage['denied'],
-    status: 401,
+// 成功响应助手，默认返回 Koa 模板风格的 message / data / type / error。
+const commonRes = ((res: Response, data: unknown = null, options?: CommonResOption) => {
+  sendResponse(res, {
+    status: options?.status ?? 200,
+    message: options?.message ?? '请求成功',
+    data,
+    type: 'success',
   })
-}
+}) as CommonRes
 
 export default commonRes
+export { sendResponse }
+export type { CommonResOption, ResponseType, SendResponseOption }
