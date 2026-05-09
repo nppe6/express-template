@@ -1,7 +1,5 @@
 import { PrismaClient } from '@prisma/client'
 import { hash } from 'argon2'
-import _ from 'lodash'
-import { Random } from 'mockjs'
 
 const prisma = new PrismaClient()
 

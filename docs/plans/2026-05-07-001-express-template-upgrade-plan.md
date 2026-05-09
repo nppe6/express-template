@@ -41,8 +41,10 @@ The goal of this plan is not to turn the repo into a large framework. It is to t
 - App config is split between `.env` and `config/default.ts`, with secrets still hardcoded in config.
 - JWT middleware is the primary API auth path. `express-session` is intentionally kept for the graphic captcha flow, so it should be treated as captcha infrastructure rather than a competing login/session auth model.
 - The current user route is not REST-shaped: `GET /users` validates login credentials from the request body.
-- Error handling is still based on local wrapper style instead of centralized middleware.
-- Several installed packages are not connected to real request flows.
+- Error handling has been moved to centralized `AppError` + not-found + error middleware.
+- API responses now follow a small Koa-template-inspired shape: `{ message, data, type, error }`.
+- Request validation has moved from `express-validator` to Joi schemas plus a generic `validate(schema, position)` middleware.
+- Several installed packages were reviewed. Unused demo-only packages are being removed, while common scaffold capabilities such as upload, captcha, simple digest helpers, and utility functions stay preinstalled.
 
 ---
 
@@ -126,8 +128,9 @@ Once the runtime/tooling base is stable, this phase removes the highest-impact s
 - `src/middleware/types.d.ts`
 - `src/utils/commonRes.ts`
 - `src/utils/logger.ts`
-- `src/utils/silentHandle.ts`
-- New error middleware files under `src/middleware/`
+- `src/errors/AppError.ts`
+- `src/middleware/error/errorHandler.ts`
+- `src/middleware/error/notFoundHandler.ts`
 
 ### Planned Changes
 
@@ -160,14 +163,14 @@ Once the runtime/tooling base is stable, this phase removes the highest-impact s
 - Introduce request identifiers if the implementation stays small enough to justify it.
 
 3. Replace local error-wrapping with centralized error middleware
-- Move away from relying on `silentHandle` as the main error propagation pattern.
-- Add not-found middleware.
-- Add centralized error middleware for validation, auth, and unexpected failures.
+- Completed: `silentHandle` has been removed from the main flow.
+- Completed: `notFoundHandler` and `errorHandler` now handle 404, validation, auth, and unexpected failures.
+- Completed: expected errors use `AppError`; unexpected errors are wrapped as 500 responses.
 
 4. Normalize response protocol
-- Keep the response wrapper lightweight, but make it predictable.
-- Separate HTTP status from business code semantics.
-- Fix clearly incorrect status usage such as JWT expiry returning `402`.
+- Completed: the response wrapper now uses the Koa-template-inspired shape `{ message, data, type, error }`.
+- Completed: HTTP status is carried by `res.status(...)`; response bodies no longer carry the old template business-code enum.
+- Completed: JWT failures now return 401 through the shared error path.
 
 5. Choose a primary auth path
 - Prefer JWT for API authentication in this repo's current API-first shape.
@@ -184,6 +187,7 @@ Once the runtime/tooling base is stable, this phase removes the highest-impact s
 - `.env.example` documents all required and optional config variables
 - Auth failures return consistent statuses and response shape
 - Unhandled exceptions route through one global error path
+- Request validation failures return the shared response shape with Joi error messages in `error`
 - No `console.log` remains in request/auth flow
 
 ### Test Expectation
@@ -207,12 +211,13 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
 
 ### Files Likely Touched
 
+- `src/router/index.ts`
 - `src/router/user.ts`
-- `src/router/module/index.ts`
-- `src/controller/userController.ts`
-- `src/service/userService.ts`
-- `src/dao/userDao.ts`
-- `src/middleware/validator/user.validator.ts`
+- `src/controller/user.controller.ts`
+- `src/service/user.service.ts`
+- `src/dao/user.dao.ts`
+- `src/middleware/validator/validate.ts`
+- `src/validations/user.validator.ts`
 - `prisma/schema.prisma`
 - `prisma/seed.ts`
 - `package.json`
@@ -230,24 +235,29 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
 - Keep this small; the goal is clean starter semantics, not full auth product scope.
 
 2. Improve validation design
-- Prefer moving request validation to `zod`, at minimum for env and request body/query params.
-- If `express-validator` remains temporarily, narrow it to the real route semantics.
+- Completed: request validation now uses Joi, matching the referenced Koa template's schema + validate middleware pattern.
+- Completed: shared validation logic lives in `src/middleware/validator/validate.ts`.
+- Completed: route-specific schemas live in `src/validations/*.validator.ts` and are applied in route files.
 
 3. Clarify service/DAO boundaries
-- Keep DAO focused on persistence access.
-- Keep service focused on business and auth decisions.
-- Keep controller focused on request/response orchestration.
+- Completed for the starter user flow:
+  - `src/router/user.ts` composes route middleware.
+  - `src/controller/user.controller.ts` orchestrates request/response.
+  - `src/service/user.service.ts` owns business logic.
+  - `src/dao/user.dao.ts` owns Prisma access.
 
 4. Clean unused dependencies
-- Reassess and likely remove:
-  - `mongoose`
-  - `@types/mongoose`
-  - `multer`
-  - `svg-captcha` only if the graphic captcha flow is removed or deferred
-  - `mockjs`
-  - `lodash` if still unused
-  - `md5` if auth cleanup removes it
-- Clean dead imports in `prisma/seed.ts`.
+- Completed:
+  - removed `express-validator`
+  - removed `mockjs` / `@types/mockjs`
+  - removed `mongoose` / `@types/mongoose`
+  - removed deprecated `@types/pino`
+  - cleaned dead imports in `prisma/seed.ts`
+- Kept as scaffold-ready dependencies:
+  - `multer` / `@types/multer` for future upload routes
+  - `svg-captcha` for future captcha routes
+  - `md5` / `@types/md5` for simple digest compatibility
+  - `lodash-es` / `@types/lodash-es` as the lighter utility helper option
 
 5. Add starter-quality tests and docs
 - Add `vitest` + `supertest` baseline coverage.
