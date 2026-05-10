@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { NextFunction, Request, Response } from 'express'
+import { Buffer } from 'node:buffer'
 import appConfig from '@/config/app.config'
 import AppError from '@/errors/AppError'
 
@@ -32,13 +33,10 @@ const invalidTokenError = () =>
  * @returns {string} Bearer token
  */
 export const generateToken = (payload: string | Buffer | object, loginInfo = 1) => {
-  return (
-    'Bearer ' +
-    jwt.sign(payload, appConfig.jwt.secret, {
-      algorithm: 'HS512',
-      expiresIn: 60 * 60 * 24 * loginInfo,
-    })
-  )
+  return `Bearer ${jwt.sign(payload, appConfig.jwt.secret, {
+    algorithm: 'HS512',
+    expiresIn: 60 * 60 * 24 * loginInfo,
+  })}`
 }
 
 /**

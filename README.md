@@ -29,14 +29,14 @@
 
 ## 我们的优势
 
-| 能力 | 说明 |
-| --- | --- |
-| 现代运行时 | Express 5 + TypeScript，适合继续扩展真实 API 项目 |
-| 数据访问 | Prisma 6 + MySQL，配置迁移到 `prisma.config.ts` |
-| 请求校验 | Joi schema 独立放在 `validations`，路由中显式组合 |
-| 错误处理 | `AppError` + 404 + 全局错误中间件，保留 Express 标准机制 |
-| 响应格式 | 统一 `{ message, data, type, error }`，贴近 Koa 模板体验 |
-| 脚手架预置 | 预留 `multer`、`svg-captcha`、`md5`、`lodash-es` |
+| 能力       | 说明                                                     |
+| ---------- | -------------------------------------------------------- |
+| 现代运行时 | Express 5 + TypeScript，适合继续扩展真实 API 项目        |
+| 数据访问   | Prisma 6 + MySQL，配置迁移到 `prisma.config.ts`          |
+| 请求校验   | Joi schema 独立放在 `validations`，路由中显式组合        |
+| 错误处理   | `AppError` + 404 + 全局错误中间件，保留 Express 标准机制 |
+| 响应格式   | 统一 `{ message, data, type, error }`，现代化api响应格式 |
+| 脚手架预置 | 预留 `multer`、`svg-captcha`、`md5`、`lodash-es`         |
 
 ## 快速开始
 
@@ -109,16 +109,19 @@ src/
 <summary>如何配置环境变量？</summary>
 
 复制 `.env.example` 为 `.env`，至少填写 `DATABASE_URL`、`JWT_SECRET`、`SESSION_SECRET`。环境变量会在启动时通过 Zod 校验。
+
 </details>
 
 <details>
 <summary>如何执行种子文件？</summary>
 
 执行 `pnpm exec prisma db seed`。Prisma 会读取 `prisma.config.ts`，并运行 `tsx prisma/seed.ts`。
+
 </details>
 
 <details>
 <summary>为什么保留 multer、svg-captcha、md5、lodash-es？</summary>
 
 这是脚手架项目的预置能力：上传、验证码、简单摘要兼容和轻量工具函数。当前不强制使用，后续业务需要时可直接接入。
+
 </details>

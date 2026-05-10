@@ -15,4 +15,3 @@ export const userValidator = Joi.object<UserInput>({
     'string.empty': '密码不能为空',
   }),
 })
-

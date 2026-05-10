@@ -70,24 +70,29 @@ This phase reduces technical drag for all later changes. It also removes the lar
 ### Planned Changes
 
 1. Align Express runtime and typing strategy
+
 - Prefer moving to `express@5.x` so runtime and types match current maintained conventions.
 - Re-verify existing middleware usage against Express 5 behavior.
 
 2. Modernize the TypeScript runtime target
+
 - Raise `target` from `es5` to `ES2022`.
 - Add explicit module resolution and other Node-friendly compiler options as needed.
 - Keep output simple and compatible with the current CommonJS shape unless there is a strong reason to move module systems now.
 
 3. Upgrade the dev workflow
+
 - Replace `ts-node-dev` with `tsx` for local development.
 - Add `build`, `start`, `test`, `lint`, and `format` scripts.
 - Keep existing Prisma scripts and preserve the working Prisma 6.19.x flow.
 
 4. Fix startup lifecycle order
+
 - Register middleware and routes before calling `listen`.
 - Return or retain the server instance for future graceful shutdown support.
 
 5. Add baseline health endpoints
+
 - Add `GET /health`.
 - Add `GET /api/health`.
 - Optionally add a version/build info endpoint if useful.
@@ -135,44 +140,50 @@ Once the runtime/tooling base is stable, this phase removes the highest-impact s
 ### Planned Changes
 
 1. Unify configuration
+
 - Stop hardcoding secrets in `config/default.ts`.
 - Move secrets and connection-sensitive values into environment variables.
 - Add a typed env/config loader with startup-time validation.
 - Keep non-sensitive defaults only where they genuinely help local development.
 
-   Proposed env validation design:
-   - Validate configuration when `src/config/app.config.ts` is imported, so invalid runtime configuration fails before the HTTP server starts.
-   - Required variables:
-     - `DATABASE_URL`: required; must be a non-empty connection string.
-     - `JWT_SECRET`: required; must be a non-empty secret and should not silently fall back to a hardcoded production secret.
-   - Optional variables with safe defaults:
-     - `PORT`: optional; defaults to `3000`; when provided, it must parse to a valid TCP port.
-     - `API_PREFIX`: optional; defaults to `/api`; when provided, it should start with `/`.
-     - JWT token lifetime should stay in the JWT module for now because the existing remember-me flow uses a runtime parameter: default `1` day, or `7` days when remember-me is selected.
-   - Fail-fast behavior:
-     - Missing or malformed required config should throw a clear startup error that names the invalid variable.
-     - The app should not continue with placeholder secrets such as `express-template` when `JWT_SECRET` is missing.
-   - Implementation direction:
-     - Keep the first pass small and local to `app.config.ts`.
-     - Prefer a typed parser such as `zod` if it is introduced for Phase 2/3 validation, otherwise implement a small explicit parser without adding a new dependency only for env validation.
-     - Keep `.env.example` in sync with every supported environment variable and document which variables are required.
+  Proposed env validation design:
+
+  - Validate configuration when `src/config/app.config.ts` is imported, so invalid runtime configuration fails before the HTTP server starts.
+  - Required variables:
+    - `DATABASE_URL`: required; must be a non-empty connection string.
+    - `JWT_SECRET`: required; must be a non-empty secret and should not silently fall back to a hardcoded production secret.
+  - Optional variables with safe defaults:
+    - `PORT`: optional; defaults to `3000`; when provided, it must parse to a valid TCP port.
+    - `API_PREFIX`: optional; defaults to `/api`; when provided, it should start with `/`.
+    - JWT token lifetime should stay in the JWT module for now because the existing remember-me flow uses a runtime parameter: default `1` day, or `7` days when remember-me is selected.
+  - Fail-fast behavior:
+    - Missing or malformed required config should throw a clear startup error that names the invalid variable.
+    - The app should not continue with placeholder secrets such as `express-template` when `JWT_SECRET` is missing.
+  - Implementation direction:
+    - Keep the first pass small and local to `app.config.ts`.
+    - Prefer a typed parser such as `zod` if it is introduced for Phase 2/3 validation, otherwise implement a small explicit parser without adding a new dependency only for env validation.
+    - Keep `.env.example` in sync with every supported environment variable and document which variables are required.
 
 2. Standardize logging and request context
+
 - Keep `pino`, but clean up logger integration.
 - Add request-aware logging, ideally through middleware rather than scattered `console.log`.
 - Introduce request identifiers if the implementation stays small enough to justify it.
 
 3. Replace local error-wrapping with centralized error middleware
+
 - Completed: `silentHandle` has been removed from the main flow.
 - Completed: `notFoundHandler` and `errorHandler` now handle 404, validation, auth, and unexpected failures.
 - Completed: expected errors use `AppError`; unexpected errors are wrapped as 500 responses.
 
 4. Normalize response protocol
+
 - Completed: the response wrapper now uses the Koa-template-inspired shape `{ message, data, type, error }`.
 - Completed: HTTP status is carried by `res.status(...)`; response bodies no longer carry the old template business-code enum.
 - Completed: JWT failures now return 401 through the shared error path.
 
 5. Choose a primary auth path
+
 - Prefer JWT for API authentication in this repo's current API-first shape.
 - Keep `express-session` for the graphic captcha flow, and avoid expanding it into a general login/session auth model unless the product scope changes.
 - Keep `svg-captcha` if the captcha route is retained or implemented in the near term.
@@ -227,6 +238,7 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
 ### Planned Changes
 
 1. Repair route semantics
+
 - Replace the current `GET /users` plus body validation shape with clearer endpoints.
 - A likely minimum set:
   - `POST /api/auth/login`
@@ -235,11 +247,13 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
 - Keep this small; the goal is clean starter semantics, not full auth product scope.
 
 2. Improve validation design
+
 - Completed: request validation now uses Joi, matching the referenced Koa template's schema + validate middleware pattern.
 - Completed: shared validation logic lives in `src/middleware/validator/validate.ts`.
 - Completed: route-specific schemas live in `src/validations/*.validator.ts` and are applied in route files.
 
 3. Clarify service/DAO boundaries
+
 - Completed for the starter user flow:
   - `src/router/user.ts` composes route middleware.
   - `src/controller/user.controller.ts` orchestrates request/response.
@@ -247,6 +261,7 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
   - `src/dao/user.dao.ts` owns Prisma access.
 
 4. Clean unused dependencies
+
 - Completed:
   - removed `express-validator`
   - removed `mockjs` / `@types/mockjs`
@@ -260,11 +275,13 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
   - `lodash-es` / `@types/lodash-es` as the lighter utility helper option
 
 5. Add starter-quality tests and docs
+
 - Add `vitest` + `supertest` baseline coverage.
 - Cover health, auth, and one user read flow.
 - Refresh README with setup, env, scripts, Prisma usage, and endpoint summary.
 
 6. Optional schema polish
+
 - Consider renaming Prisma model `user` to `User` while preserving table mapping via `@@map("user")`.
 - Consider renaming `createAt/updateAt` to `createdAt/updatedAt` in Prisma and app code for consistency.
 - Do this only if it does not create unnecessary migration churn for the current stage.
@@ -307,7 +324,7 @@ This phase depends on the runtime/config/error/auth cleanup from Phases 1 and 2.
 ## Risks & Mitigations
 
 | Risk | Mitigation |
-|------|------------|
+| --- | --- |
 | Express 5 migration changes middleware behavior unexpectedly | Keep Phase 1 small, validate route and middleware behavior immediately after the version move |
 | Config migration breaks local startup | Add typed env validation and provide a clear `.env.example` or README env section |
 | Auth cleanup causes regressions in the only existing user route | Rewrite route semantics and tests together in Phase 3 |

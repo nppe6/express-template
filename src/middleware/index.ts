@@ -3,7 +3,7 @@ import cors from 'cors'
 import morgan from 'morgan'
 import session from 'express-session'
 import appConfig from '@/config/app.config'
-import path from 'path'
+import path from 'node:path'
 
 function initMiddleware(app: Express) {
   app.use(express.json())
